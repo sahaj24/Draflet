@@ -1,0 +1,396 @@
+[0/1] Planning build
+Building for debugging...
+[0/4] Write swift-version--58304C5D6DBC2206.txt
+[2/6] Emitting module AIWritingAssistant
+[3/6] Compiling AIWritingAssistant AIWritingAssistantApp.swift
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:85:20: warning: main actor-isolated property 'image' can not be mutated from a nonisolated context
+ 79 |     }
+ 80 |     
+ 81 |     private func setupMenuBar() {
+    |                  `- note: add '@MainActor' to make instance method 'setupMenuBar()' part of global actor 'MainActor'
+ 82 |         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+ 83 |         
+ 84 |         if let button = statusItem?.button {
+ 85 |             button.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "AI Assistant")
+    |                    `- warning: main actor-isolated property 'image' can not be mutated from a nonisolated context
+ 86 |             button.action = #selector(showMainWindow)
+ 87 |             button.target = self
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSButton.h:129:39: note: mutation of this property is only permitted within the actor
+127 | 
+128 | /*! The image that appears on the button when it’s in an off state, or nil if there is no such image. */
+129 | @property (nullable, strong) NSImage *image;
+    |                                       `- note: mutation of this property is only permitted within the actor
+130 | 
+131 | /*! An alternate image that appears on the button when the button is in an on state, or nil if there is no such image. Note that some button types do not display an alternate image. */
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:86:20: warning: main actor-isolated property 'action' can not be mutated from a nonisolated context
+ 79 |     }
+ 80 |     
+ 81 |     private func setupMenuBar() {
+    |                  `- note: add '@MainActor' to make instance method 'setupMenuBar()' part of global actor 'MainActor'
+ 82 |         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+ 83 |         
+ 84 |         if let button = statusItem?.button {
+ 85 |             button.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "AI Assistant")
+ 86 |             button.action = #selector(showMainWindow)
+    |                    `- warning: main actor-isolated property 'action' can not be mutated from a nonisolated context
+ 87 |             button.target = self
+ 88 |         }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSControl.h:25:26: note: mutation of this property is only permitted within the actor
+ 23 | 
+ 24 | @property (nullable, weak) id target; // Target is weak for zeroing-weak compatible objects in apps linked on 10.10 or later. Otherwise the behavior of this property is 'assign’.
+ 25 | @property (nullable) SEL action;
+    |                          `- note: mutation of this property is only permitted within the actor
+ 26 | @property NSInteger tag;
+ 27 | @property BOOL ignoresMultiClick;
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:87:20: warning: main actor-isolated property 'target' can not be mutated from a nonisolated context
+ 79 |     }
+ 80 |     
+ 81 |     private func setupMenuBar() {
+    |                  `- note: add '@MainActor' to make instance method 'setupMenuBar()' part of global actor 'MainActor'
+ 82 |         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+ 83 |         
+    :
+ 85 |             button.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "AI Assistant")
+ 86 |             button.action = #selector(showMainWindow)
+ 87 |             button.target = self
+    |                    `- warning: main actor-isolated property 'target' can not be mutated from a nonisolated context
+ 88 |         }
+ 89 |         
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSControl.h:24:31: note: mutation of this property is only permitted within the actor
+ 22 | - (nullable instancetype)initWithCoder:(NSCoder *)coder NS_DESIGNATED_INITIALIZER;
+ 23 | 
+ 24 | @property (nullable, weak) id target; // Target is weak for zeroing-weak compatible objects in apps linked on 10.10 or later. Otherwise the behavior of this property is 'assign’.
+    |                               `- note: mutation of this property is only permitted within the actor
+ 25 | @property (nullable) SEL action;
+ 26 | @property NSInteger tag;
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:107:21: warning: capture of 'self' with non-Sendable type 'AppDelegate?' in a '@Sendable' closure [#SendableClosureCaptures]
+ 40 | 
+ 41 | // MARK: - AppDelegate
+ 42 | class AppDelegate: NSObject, NSApplicationDelegate {
+    |       `- note: class 'AppDelegate' does not conform to the 'Sendable' protocol
+ 43 |     
+ 44 |     var floatingWindowController: FloatingWindowController?
+    :
+105 |                 switch result {
+106 |                 case .success(let capturedText):
+107 |                     self?.autoExecute(text: capturedText)
+    |                     `- warning: capture of 'self' with non-Sendable type 'AppDelegate?' in a '@Sendable' closure [#SendableClosureCaptures]
+108 |                 case .failure(let error):
+109 |                     self?.handleCaptureError(error)
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:107:21: warning: reference to captured var 'self' in concurrently-executing code [#SendableClosureCaptures]
+105 |                 switch result {
+106 |                 case .success(let capturedText):
+107 |                     self?.autoExecute(text: capturedText)
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code [#SendableClosureCaptures]
+108 |                 case .failure(let error):
+109 |                     self?.handleCaptureError(error)
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:109:21: warning: reference to captured var 'self' in concurrently-executing code [#SendableClosureCaptures]
+107 |                     self?.autoExecute(text: capturedText)
+108 |                 case .failure(let error):
+109 |                     self?.handleCaptureError(error)
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code [#SendableClosureCaptures]
+110 |                 }
+111 |             }
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:124:59: error: missing argument label 'with:' in call
+122 |                 switch result {
+123 |                 case .success(let rewrittenText):
+124 |                     self?.textManager?.replaceSelectedText(rewrittenText) { replaceResult in
+    |                                                           `- error: missing argument label 'with:' in call
+125 |                         if case .success = replaceResult {
+126 |                             self?.usageTracker.recordUsage(
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:154:21: warning: call to main actor-isolated initializer 'init()' in a synchronous nonisolated context [#ActorIsolatedCall]
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+    |                     `- warning: call to main actor-isolated initializer 'init()' in a synchronous nonisolated context [#ActorIsolatedCall]
+155 |         alert.alertStyle = .warning
+156 |         
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/usr/include/objc/NSObject.h:66:1: note: calls to initializer 'init()' from outside of its actor context are implicitly asynchronous
+ 64 | 
+ 65 | + (void)initialize;
+ 66 | - (instancetype)init
+    | `- note: calls to initializer 'init()' from outside of its actor context are implicitly asynchronous
+ 67 | #if NS_ENFORCE_NSOBJECT_DESIGNATED_INITIALIZER
+ 68 |     NS_DESIGNATED_INITIALIZER
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:155:15: warning: main actor-isolated property 'alertStyle' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    |               `- warning: main actor-isolated property 'alertStyle' can not be mutated from a nonisolated context
+156 |         
+157 |         switch error {
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:109:24: note: mutation of this property is only permitted within the actor
+107 | 
+108 | /// Indicates the alert’s severity level. See the `NSAlertStyle` enumeration for the list of alert style constants.
+109 | @property NSAlertStyle alertStyle;
+    |                        `- note: mutation of this property is only permitted within the actor
+110 | 
+111 | /// Specifies whether the alert has a help button.
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:159:19: warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+157 |         switch error {
+158 |         case .noSelection:
+159 |             alert.messageText = "No Text Selected"
+    |                   `- warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+160 |             alert.informativeText = "Please select some text before using the shortcut."
+161 |         case .accessibilityDenied:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:71:28: note: mutation of this property is only permitted within the actor
+ 69 | /// The text that is displayed prominently in the alert.
+ 70 | /// - Note: Use this string to get the user’s attention and communicate the reason for displaying the alert.
+ 71 | @property (copy) NSString *messageText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 72 | 
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:160:19: warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+158 |         case .noSelection:
+159 |             alert.messageText = "No Text Selected"
+160 |             alert.informativeText = "Please select some text before using the shortcut."
+    |                   `- warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+161 |         case .accessibilityDenied:
+162 |             alert.messageText = "Accessibility Access Required"
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:75:28: note: mutation of this property is only permitted within the actor
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+ 74 | /// - Note: The informative text string is displayed below the message text and is less prominent. Use this string to provide additional context about the reason for the alert or about the actions that the user might take.
+ 75 | @property (copy) NSString *informativeText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 76 | 
+ 77 | // MARK: - Accessing a Custom Alert Icon
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:162:19: warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+160 |             alert.informativeText = "Please select some text before using the shortcut."
+161 |         case .accessibilityDenied:
+162 |             alert.messageText = "Accessibility Access Required"
+    |                   `- warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+163 |             alert.informativeText = "Please enable accessibility access in System Settings > Privacy & Security > Accessibility, then restart the app."
+164 |             alert.addButton(withTitle: "Open System Settings")
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:71:28: note: mutation of this property is only permitted within the actor
+ 69 | /// The text that is displayed prominently in the alert.
+ 70 | /// - Note: Use this string to get the user’s attention and communicate the reason for displaying the alert.
+ 71 | @property (copy) NSString *messageText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 72 | 
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:163:19: warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+161 |         case .accessibilityDenied:
+162 |             alert.messageText = "Accessibility Access Required"
+163 |             alert.informativeText = "Please enable accessibility access in System Settings > Privacy & Security > Accessibility, then restart the app."
+    |                   `- warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+164 |             alert.addButton(withTitle: "Open System Settings")
+165 |             if alert.runModal() == .alertFirstButtonReturn {
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:75:28: note: mutation of this property is only permitted within the actor
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+ 74 | /// - Note: The informative text string is displayed below the message text and is less prominent. Use this string to provide additional context about the reason for the alert or about the actions that the user might take.
+ 75 | @property (copy) NSString *informativeText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 76 | 
+ 77 | // MARK: - Accessing a Custom Alert Icon
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:164:19: warning: call to main actor-isolated instance method 'addButton(withTitle:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+162 |             alert.messageText = "Accessibility Access Required"
+163 |             alert.informativeText = "Please enable accessibility access in System Settings > Privacy & Security > Accessibility, then restart the app."
+164 |             alert.addButton(withTitle: "Open System Settings")
+    |                   `- warning: call to main actor-isolated instance method 'addButton(withTitle:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+165 |             if alert.runModal() == .alertFirstButtonReturn {
+166 |                 if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+
+AppKit.NSAlert.addButton:2:22: note: calls to instance method 'addButton(withTitle:)' from outside of its actor context are implicitly asynchronous
+1 | class NSAlert {
+2 | @MainActor open func addButton(withTitle title: String) -> NSButton}
+  |                      `- note: calls to instance method 'addButton(withTitle:)' from outside of its actor context are implicitly asynchronous
+3 | 
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:165:22: warning: call to main actor-isolated instance method 'runModal()' in a synchronous nonisolated context [#ActorIsolatedCall]
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+163 |             alert.informativeText = "Please enable accessibility access in System Settings > Privacy & Security > Accessibility, then restart the app."
+164 |             alert.addButton(withTitle: "Open System Settings")
+165 |             if alert.runModal() == .alertFirstButtonReturn {
+    |                      `- warning: call to main actor-isolated instance method 'runModal()' in a synchronous nonisolated context [#ActorIsolatedCall]
+166 |                 if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+167 |                     NSWorkspace.shared.open(url)
+
+AppKit.NSAlert.runModal:2:22: note: calls to instance method 'runModal()' from outside of its actor context are implicitly asynchronous
+1 | class NSAlert {
+2 | @MainActor open func runModal() -> NSApplication.ModalResponse}
+  |                      `- note: calls to instance method 'runModal()' from outside of its actor context are implicitly asynchronous
+3 | 
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:172:19: warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+170 |             return
+171 |         case .captureFailed:
+172 |             alert.messageText = "Text Capture Failed"
+    |                   `- warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+173 |             alert.informativeText = "Unable to capture text. Try selecting text again."
+174 |         case .replacementFailed:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:71:28: note: mutation of this property is only permitted within the actor
+ 69 | /// The text that is displayed prominently in the alert.
+ 70 | /// - Note: Use this string to get the user’s attention and communicate the reason for displaying the alert.
+ 71 | @property (copy) NSString *messageText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 72 | 
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:173:19: warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+171 |         case .captureFailed:
+172 |             alert.messageText = "Text Capture Failed"
+173 |             alert.informativeText = "Unable to capture text. Try selecting text again."
+    |                   `- warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+174 |         case .replacementFailed:
+175 |             alert.messageText = "Text Replacement Failed"
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:75:28: note: mutation of this property is only permitted within the actor
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+ 74 | /// - Note: The informative text string is displayed below the message text and is less prominent. Use this string to provide additional context about the reason for the alert or about the actions that the user might take.
+ 75 | @property (copy) NSString *informativeText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 76 | 
+ 77 | // MARK: - Accessing a Custom Alert Icon
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:175:19: warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+173 |             alert.informativeText = "Unable to capture text. Try selecting text again."
+174 |         case .replacementFailed:
+175 |             alert.messageText = "Text Replacement Failed"
+    |                   `- warning: main actor-isolated property 'messageText' can not be mutated from a nonisolated context
+176 |             alert.informativeText = "Unable to replace text. Please try again."
+177 |         }
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:71:28: note: mutation of this property is only permitted within the actor
+ 69 | /// The text that is displayed prominently in the alert.
+ 70 | /// - Note: Use this string to get the user’s attention and communicate the reason for displaying the alert.
+ 71 | @property (copy) NSString *messageText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 72 | 
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:176:19: warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+174 |         case .replacementFailed:
+175 |             alert.messageText = "Text Replacement Failed"
+176 |             alert.informativeText = "Unable to replace text. Please try again."
+    |                   `- warning: main actor-isolated property 'informativeText' can not be mutated from a nonisolated context
+177 |         }
+178 |         
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h:75:28: note: mutation of this property is only permitted within the actor
+ 73 | /// The descriptive text that provides more details about the reason for the alert.
+ 74 | /// - Note: The informative text string is displayed below the message text and is less prominent. Use this string to provide additional context about the reason for the alert or about the actions that the user might take.
+ 75 | @property (copy) NSString *informativeText;
+    |                            `- note: mutation of this property is only permitted within the actor
+ 76 | 
+ 77 | // MARK: - Accessing a Custom Alert Icon
+
+/Users/sahaj/Desktop/mac2/AIWritingAssistant/Sources/AIWritingAssistantApp.swift:180:19: warning: call to main actor-isolated instance method 'runModal()' in a synchronous nonisolated context [#ActorIsolatedCall]
+151 |     }
+152 |     
+153 |     private func handleCaptureError(_ error: TextCaptureError) {
+    |                  `- note: add '@MainActor' to make instance method 'handleCaptureError' part of global actor 'MainActor'
+154 |         let alert = NSAlert()
+155 |         alert.alertStyle = .warning
+    :
+178 |         
+179 |         if error != .accessibilityDenied {
+180 |             alert.runModal()
+    |                   `- warning: call to main actor-isolated instance method 'runModal()' in a synchronous nonisolated context [#ActorIsolatedCall]
+181 |         }
+182 |     }
+
+AppKit.NSAlert.runModal:2:22: note: calls to instance method 'runModal()' from outside of its actor context are implicitly asynchronous
+1 | class NSAlert {
+2 | @MainActor open func runModal() -> NSApplication.ModalResponse}
+  |                      `- note: calls to instance method 'runModal()' from outside of its actor context are implicitly asynchronous
+3 | 
+
+[#ActorIsolatedCall]: <https://docs.swift.org/compiler/documentation/diagnostics/actor-isolated-call>
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>

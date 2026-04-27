@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Sandbox - required for Mac App Store -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    
+    <!-- Network access for AI APIs -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    
+    <!-- Accessibility access - required for text capture/replace -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.apple.accessibility.AXVisualSupport</string>
+    </array>
+    
+    <!-- User-selected file access for export functionality -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    
+    <!-- Hardened Runtime exceptions for Accessibility -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <false/>
+    
+    <!-- Allow Apple Events - needed for some text replacement methods -->
+    <key>com.apple.security.automation.apple-events</key>
+    <array>
+        <string>com.apple.systemevents</string>
+    </array>
+</dict>
+</plist>

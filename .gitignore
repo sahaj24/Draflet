@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+build/
+DerivedData/
+.swiftpm/
+Package.resolved
+*.swp
+*.swo
+*.log
+*.dSYM/
