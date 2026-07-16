@@ -92,14 +92,18 @@ class AuthManager: ObservableObject {
     
     /// Sign out the current user
     func signOut() {
+        let accessToken = currentUser?.accessToken
+
         currentUser = nil
         isAuthenticated = false
         UserDefaults.standard.removeObject(forKey: sessionKey)
         NotificationCenter.default.post(name: NSNotification.Name("AuthStateChanged"), object: nil)
         
-        // Also sign out from Supabase
-        Task {
-            await performSignOut()
+        // Revoke the remote session using the token captured before local state is cleared.
+        if let accessToken {
+            Task {
+                await performSignOut(accessToken: accessToken)
+            }
         }
     }
     
@@ -283,9 +287,7 @@ class AuthManager: ObservableObject {
         }
     }
     
-    private func performSignOut() async {
-        guard let accessToken = currentUser?.accessToken else { return }
-        
+    private func performSignOut(accessToken: String) async {
         guard let url = URL(string: "\(supabaseURL)/auth/v1/logout") else { return }
         
         var request = URLRequest(url: url)

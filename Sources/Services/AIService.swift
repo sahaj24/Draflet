@@ -336,10 +336,14 @@ class AIService {
             return
         }
         
+        let effectiveCustomPrompt = customSystemPrompt
+            ?? customInstruction?.trimmingCharacters(in: .whitespacesAndNewlines)
+            ?? action.systemPrompt
+
         let requestBody: [String: Any] = [
             "text": text,
             "action": action.rawValue,
-            "customPrompt": customSystemPrompt ?? action.systemPrompt,
+            "customPrompt": effectiveCustomPrompt,
             "supabaseToken": token
         ]
         

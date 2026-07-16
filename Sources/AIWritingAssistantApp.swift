@@ -193,12 +193,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Handle aiwriting://callback?token=xxx&refresh_token=xxx
         guard url.scheme == "aiwriting",
               url.host == "callback" else { return }
-
-        func decodeQueryValue(_ value: String?) -> String? {
-            guard let value else { return nil }
-            let plusFixed = value.replacingOccurrences(of: "+", with: " ")
-            return plusFixed.removingPercentEncoding ?? plusFixed
-        }
         
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems ?? []
@@ -223,11 +217,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             case "user_id":
                 userId = item.value
             case "email":
-                email = decodeQueryValue(item.value)
+                email = item.value
             case "display_name":
-                displayName = decodeQueryValue(item.value)
+                displayName = item.value
             case "avatar_url":
-                avatarUrl = decodeQueryValue(item.value)
+                avatarUrl = item.value
             case "plan":
                 plan = item.value ?? "free"
             default:
@@ -259,7 +253,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AuthManager.shared.currentUser = session
         AuthManager.shared.isAuthenticated = true
         AuthManager.shared.saveSession(session)
-        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
         
         // Trigger auth state change to show main window
         NotificationCenter.default.post(name: NSNotification.Name("AuthStateChanged"), object: nil)

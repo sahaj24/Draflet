@@ -20,12 +20,19 @@ class TextCaptureManager {
     /// Cache for the original text to support undo functionality
     private var originalTextCache: String?
     private var targetElement: AXUIElement?
+    private var targetTextRange: CFRange?
+    private var replacementTextRange: CFRange?
     
     // MARK: - Public Methods
     
     /// Captures selected text, or current line/paragraph if no selection
     /// - Parameter completion: Callback with the captured text or error
     func captureTextOrCurrentLine(completion: @escaping (Result<(text: String, isSelection: Bool), TextCaptureError>) -> Void) {
+        originalTextCache = nil
+        targetElement = nil
+        targetTextRange = nil
+        replacementTextRange = nil
+
         // Check accessibility permissions first
         guard checkAccessibilityPermissions() else {
             completion(.failure(.accessibilityDenied))
@@ -55,25 +62,26 @@ class TextCaptureManager {
         }
         
         // Store reference to the element for later replacement
-        targetElement = (element as! AXUIElement)
+        let focusedAXElement = element as! AXUIElement
+        targetElement = focusedAXElement
         
         // First try to get selected text
         var selectedTextValue: AnyObject?
         let textResult = AXUIElementCopyAttributeValue(
-            targetElement!,
+            focusedAXElement,
             kAXSelectedTextAttribute as CFString,
             &selectedTextValue
         )
         
         if textResult == .success, let selectedText = selectedTextValue as? String, !selectedText.isEmpty {
-            // We have selected text - use it
             originalTextCache = selectedText
+            targetTextRange = selectedTextRange(for: focusedAXElement)
             completion(.success((text: selectedText, isSelection: true)))
             return
         }
         
         // No selection - try to get current line/paragraph from cursor position
-        if tryCaptureCurrentParagraph(element: targetElement!, completion: completion) {
+        if tryCaptureCurrentParagraph(element: focusedAXElement, completion: completion) {
             return
         }
         
@@ -168,9 +176,8 @@ class TextCaptureManager {
                 
                 // If clipboard changed and has content, we captured selected text
                 if newChangeCount != oldChangeCount, let capturedText = newContents, !capturedText.isEmpty {
-                    // Restore original clipboard
-                    if let oldContents = oldContents {
-                        pasteboard.clearContents()
+                    pasteboard.clearContents()
+                    if let oldContents {
                         pasteboard.setString(oldContents, forType: .string)
                     }
                     
@@ -181,14 +188,18 @@ class TextCaptureManager {
                     return
                 }
                 
-                // No text selected - try to select current line and copy
-                self.trySelectAndCopyLine(
-                    oldContents: oldContents,
-                    oldChangeCount: oldChangeCount,
-                    pasteboard: pasteboard,
-                    attempt: attempt,
-                    completion: completion
-                )
+                // No selection was copied. Retry once with longer delays, then fail without
+                // sending Cmd+L, which selects the address bar in browsers rather than text.
+                if attempt < 2 {
+                    self.tryClipboardCapture(attempt: attempt + 1, completion: completion)
+                    return
+                }
+
+                pasteboard.clearContents()
+                if let oldContents {
+                    pasteboard.setString(oldContents, forType: .string)
+                }
+                completion(.failure(.noSelection))
             }
         }
     }
@@ -381,30 +392,56 @@ class TextCaptureManager {
         cmdUp.post(tap: location)
     }
     
-    /// Extracts the paragraph containing the given position
-    private func extractParagraph(at position: Int, in text: String) -> String {
-        let index = text.index(text.startIndex, offsetBy: min(position, text.count))
-        
-        // Find paragraph start (previous newline or start of text)
-        var paragraphStart = text.startIndex
-        if let lastNewline = text[..<index].lastIndex(of: "\n") {
-            paragraphStart = text.index(after: lastNewline)
+    private func selectedTextRange(for element: AXUIElement) -> CFRange? {
+        var rangeResult: AnyObject?
+        let status = AXUIElementCopyAttributeValue(
+            element,
+            kAXSelectedTextRangeAttribute as CFString,
+            &rangeResult
+        )
+
+        guard status == .success,
+              let rangeValue = rangeResult,
+              CFGetTypeID(rangeValue) == AXValueGetTypeID() else {
+            return nil
         }
-        
-        // Find paragraph end (next newline or end of text)
-        var paragraphEnd = text.endIndex
-        if let nextNewline = text[index...].firstIndex(of: "\n") {
-            paragraphEnd = nextNewline
+
+        var range = CFRange(location: 0, length: 0)
+        guard AXValueGetValue(rangeValue as! AXValue, .cfRange, &range) else {
+            return nil
         }
-        
-        let paragraph = String(text[paragraphStart..<paragraphEnd])
-        return paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+        return range
+    }
+
+    /// Extracts the line containing the given UTF-16 cursor position.
+    private func extractParagraph(at position: Int, in text: String) -> (text: String, range: CFRange)? {
+        let nsText = text as NSString
+        let safePosition = max(0, min(position, nsText.length))
+        var lineRange = nsText.lineRange(for: NSRange(location: safePosition, length: 0))
+
+        // Preserve indentation and spacing, but leave the line separator untouched.
+        while lineRange.length > 0 {
+            let lastIndex = NSMaxRange(lineRange) - 1
+            let character = nsText.character(at: lastIndex)
+            guard character == 10 || character == 13 else { break }
+            lineRange.length -= 1
+        }
+
+        guard lineRange.length > 0 else { return nil }
+        let paragraph = nsText.substring(with: lineRange)
+        guard !paragraph.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+
+        return (
+            text: paragraph,
+            range: CFRange(location: lineRange.location, length: lineRange.length)
+        )
     }
     
     /// Try to capture the current paragraph at cursor position when no text is selected
     /// Returns true if successful, false to continue to next fallback
     private func tryCaptureCurrentParagraph(element: AXUIElement, completion: @escaping (Result<(text: String, isSelection: Bool), TextCaptureError>) -> Void) -> Bool {
-        // Get the full text value
         var valueResult: AnyObject?
         let result = AXUIElementCopyAttributeValue(
             element,
@@ -414,120 +451,100 @@ class TextCaptureManager {
         
         guard result == .success,
               let fullText = valueResult as? String,
-              !fullText.isEmpty else {
+              !fullText.isEmpty,
+              let cursorRange = selectedTextRange(for: element),
+              let paragraph = extractParagraph(at: cursorRange.location, in: fullText) else {
             return false
         }
         
-        // Get the selected text range to find cursor position
-        var rangeResult: AnyObject?
-        let rangeStatus = AXUIElementCopyAttributeValue(
-            element,
-            kAXSelectedTextRangeAttribute as CFString,
-            &rangeResult
-        )
-        
-        var cursorPosition = 0
-        if rangeStatus == .success,
-           let rangeValue = rangeResult,
-           CFGetTypeID(rangeValue) == AXValueGetTypeID() {
-            var range = CFRange(location: 0, length: 0)
-            AXValueGetValue(rangeValue as! AXValue, .cfRange, &range)
-            cursorPosition = range.location
-        }
-        
-        // Extract the paragraph at cursor position
-        let paragraph = extractParagraph(at: cursorPosition, in: fullText)
-        
-        guard !paragraph.isEmpty else {
-            return false
-        }
-        
-        // Store the paragraph for replacement
-        self.originalTextCache = paragraph
-        
-        // Mark that we captured the current paragraph (not a selection)
-        // Return false for isSelection since we captured the whole paragraph
-        completion(.success((text: paragraph, isSelection: false)))
+        originalTextCache = paragraph.text
+        targetTextRange = paragraph.range
+        completion(.success((text: paragraph.text, isSelection: false)))
         return true
     }
     
-    /// Replaces the selected text with new content
-    /// - Parameters:
-    ///   - newText: The AI-generated text to insert
-    ///   - completion: Callback with success or error
+    private func setSelectedTextRange(_ range: CFRange, for element: AXUIElement) -> Bool {
+        var mutableRange = range
+        guard let rangeValue = AXValueCreate(.cfRange, &mutableRange) else {
+            return false
+        }
+
+        return AXUIElementSetAttributeValue(
+            element,
+            kAXSelectedTextRangeAttribute as CFString,
+            rangeValue
+        ) == .success
+    }
+
+    /// Replaces only the captured selection or paragraph range.
     func replaceSelectedText(with newText: String, completion: @escaping (Result<Void, TextCaptureError>) -> Void) {
-        // If we used clipboard capture (targetElement is nil), use clipboard replacement
-        guard let targetElement = targetElement else {
+        guard let targetElement else {
             performClipboardReplacement(with: newText) { success in
-                if success {
-                    completion(.success(()))
-                } else {
-                    completion(.failure(.replacementFailed))
-                }
+                completion(success ? .success(()) : .failure(.replacementFailed))
             }
             return
         }
-        
-        // Store current text for potential undo later
-        if originalTextCache == nil {
-            var currentValue: AnyObject?
-            AXUIElementCopyAttributeValue(
-                targetElement,
-                kAXValueAttribute as CFString,
-                &currentValue
-            )
-            originalTextCache = currentValue as? String
+
+        let activeRange = targetTextRange ?? selectedTextRange(for: targetElement)
+        if let activeRange {
+            guard setSelectedTextRange(activeRange, for: targetElement) else {
+                completion(.failure(.replacementFailed))
+                return
+            }
         }
-        
-        // Method 1: Try using the AXValue attribute
-        let setValueResult = AXUIElementSetAttributeValue(
-            targetElement,
-            kAXValueAttribute as CFString,
-            newText as CFTypeRef
-        )
-        
-        if setValueResult == .success {
-            completion(.success(()))
-            return
-        }
-        
-        // Method 2: Try using selected text replacement
+
         let setSelectedResult = AXUIElementSetAttributeValue(
             targetElement,
             kAXSelectedTextAttribute as CFString,
             newText as CFTypeRef
         )
-        
+
         if setSelectedResult == .success {
+            if let activeRange {
+                replacementTextRange = CFRange(
+                    location: activeRange.location,
+                    length: (newText as NSString).length
+                )
+            }
             completion(.success(()))
             return
         }
-        
-        // Method 3: Use clipboard-based replacement with paste command
+
+        // The captured range remains selected, so clipboard paste replaces only that range.
         performClipboardReplacement(with: newText) { success in
-            if success {
-                completion(.success(()))
-            } else {
-                completion(.failure(.replacementFailed))
+            if success, let activeRange {
+                self.replacementTextRange = CFRange(
+                    location: activeRange.location,
+                    length: (newText as NSString).length
+                )
             }
+            completion(success ? .success(()) : .failure(.replacementFailed))
         }
     }
     
-    /// Restores the original text (undo functionality)
-    /// - Parameter completion: Callback when undo is complete
+    /// Restores the original captured text without replacing the entire field.
     func undoLastReplacement(completion: @escaping (Bool) -> Void) {
         guard let originalText = originalTextCache,
-              let targetElement = targetElement else {
+              let targetElement,
+              let range = replacementTextRange ?? targetTextRange,
+              setSelectedTextRange(range, for: targetElement) else {
             completion(false)
             return
         }
-        
+
         let result = AXUIElementSetAttributeValue(
             targetElement,
-            kAXValueAttribute as CFString,
+            kAXSelectedTextAttribute as CFString,
             originalText as CFTypeRef
         )
-        
+
+        if result == .success {
+            targetTextRange = CFRange(
+                location: range.location,
+                length: (originalText as NSString).length
+            )
+            replacementTextRange = nil
+        }
         completion(result == .success)
     }
     
@@ -590,8 +607,8 @@ class TextCaptureManager {
             
             // Restore original clipboard content after a delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if let oldContents = oldContents {
-                    pasteboard.clearContents()
+                pasteboard.clearContents()
+                if let oldContents {
                     pasteboard.setString(oldContents, forType: .string)
                 }
                 completion(true)

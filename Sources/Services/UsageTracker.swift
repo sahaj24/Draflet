@@ -208,13 +208,23 @@ class UsageTracker: ObservableObject {
     
     /// Exports history to JSON
     func exportToJSON() -> Data? {
-        let exportData: [String: Any] = [
-            "exportDate": ISO8601DateFormatter().string(from: Date()),
-            "statistics": try? JSONEncoder().encode(statistics),
-            "entries": entries.map { try? JSONEncoder().encode($0) }
-        ]
-        
-        return try? JSONSerialization.data(withJSONObject: exportData, options: .prettyPrinted)
+        struct ExportData: Codable {
+            let exportDate: Date
+            let statistics: UsageStatistics
+            let entries: [UsageEntry]
+        }
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+
+        return try? encoder.encode(
+            ExportData(
+                exportDate: Date(),
+                statistics: statistics,
+                entries: entries
+            )
+        )
     }
     
     // MARK: - Private Methods
